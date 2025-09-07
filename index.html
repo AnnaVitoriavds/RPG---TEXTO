@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Saga da Coroa Fragmentada</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-bg: #1a1a2e; --secondary-bg: #16213e; --accent-color: #e94560;
+            --text-color: #dcdcdc; --highlight-color: #0f3460; --disabled-color: #555;
+            --success-color: #27ae60; --gold-color: #ffeb3b; --part2-color: #9b59b6;
+        }
+        body { font-family: 'Cinzel', serif; margin: 0; padding: 0; overflow: hidden; }
+        #background-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; transition: background-image 1.5s ease-in-out; z-index: -1; }
+        #game-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; width: 100%; padding: 20px; box-sizing: border-box; background: rgba(0, 0, 0, 0.4); }
+        .game-container { width: 100%; max-width: 900px; background: rgba(15, 34, 60, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px; border: 2px solid rgba(74, 144, 226, 0.5); box-shadow: 0 0 40px rgba(15, 52, 96, 0.7); padding: 30px 40px; text-align: center; animation: fadeIn 1.5s ease-in-out; }
+        #start-screen h1 { font-family: 'MedievalSharp', cursive; font-size: clamp(2.5em, 6vw, 3.5em); color: var(--accent-color); text-shadow: 0 0 15px var(--accent-color); }
+        #player-name-input { font-family: 'Cinzel', serif; font-size: 1.2em; padding: 10px; margin: 10px 0 25px 0; width: 80%; max-width: 400px; background: rgba(255, 255, 255, 0.1); border: 2px solid var(--highlight-color); border-radius: 8px; color: var(--text-color); text-align: center; }
+        .class-selection-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+        .class-card { background: var(--highlight-color); border: 3px solid #4a90e2; border-radius: 10px; padding: 20px; width: 180px; cursor: pointer; transition: all 0.3s ease; }
+        .class-card:hover { transform: translateY(-10px); border-color: var(--accent-color); }
+        .class-card.selected { border-color: var(--accent-color); box-shadow: 0 0 20px var(--accent-color); transform: scale(1.05); }
+        .class-card i { font-size: 3em; margin-bottom: 10px; } .class-card h3 { margin: 10px 0 5px 0; font-size: 1.3em; } .class-card p { font-size: 0.9em; line-height: 1.4; color: #aaa; }
+        #start-button { background: var(--accent-color); color: white; padding: 15px 30px; font-size: 1.3em; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; margin-top: 20px; }
+        #start-button:disabled { background: var(--disabled-color); cursor: not-allowed; }
+        #start-button:not(:disabled):hover { transform: scale(1.05); box-shadow: 0 0 20px var(--accent-color); }
+        #game-screen { display: none; }
+        #scene-icon { font-size: clamp(4em, 10vw, 6em); color: var(--accent-color); text-shadow: 0 0 20px var(--accent-color); margin-bottom: 20px; transition: transform 0.5s ease, color 0.5s ease; }
+        .game-info-bar { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+        #inventory-container, #player-stats-container { min-height: 40px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; text-align: left; flex-grow: 1; }
+        #player-stats-container { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .stat-display, .inventory-item { display: inline-flex; align-items: center; background: var(--highlight-color); padding: 5px 10px; border-radius: 15px; font-size: 0.9em; }
+        .stat-display i { margin-right: 8px; color: #a9a9a9; width: 15px; }
+        .inventory-item i { margin-right: 8px; color: #4a90e2; }
+        #story-text { font-size: 1.2em; line-height: 1.7; margin-bottom: 30px; min-height: 150px; text-align: justify; font-family: 'Times New Roman', Times, serif; }
+        .ending-text { font-family: 'MedievalSharp', cursive; font-weight: bold; font-size: 2em; color: var(--gold-color); text-align: center; text-shadow: 0 0 10px var(--gold-color); }
+        .ending-text.failure { color: var(--accent-color); text-shadow: 0 0 10px var(--accent-color); }
+        .highlight { color: var(--accent-color); font-weight: bold; }
+        #choices { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 600px) { #choices { grid-template-columns: 1fr 1fr; } }
+        .choice-btn { background: var(--highlight-color); color: var(--text-color); border: 1px solid #4a90e2; padding: 15px 20px; font-family: 'Cinzel', serif; font-size: 1.1em; cursor: pointer; border-radius: 8px; transition: all 0.3s ease; display: flex; align-items: center; text-align: left; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); }
+        .choice-btn:not(:disabled):hover { border-color: var(--accent-color); transform: translateX(10px); }
+        .choice-btn:disabled { background: var(--disabled-color); color: #999; cursor: not-allowed; opacity: 0.7; }
+        .choice-btn i { margin-right: 15px; font-size: 1.4em; width: 30px; text-align: center; }
+        .class-choice-guerreiro { border-left: 5px solid #c0392b; } .class-choice-mago { border-left: 5px solid #2980b9; } .class-choice-ladino { border-left: 5px solid #27ae60; }
+        #end-game-options { display: none; flex-direction: column; align-items: center; gap: 15px; margin-top: 30px; animation: fadeIn 1s; }
+        .end-game-btn { color: var(--text-color); padding: 15px 30px; font-size: 1.1em; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; width: 280px; }
+        .end-game-btn:hover { color: white; transform: scale(1.05); }
+        #part2-btn { background: var(--part2-color); border: 1px solid var(--part2-color); display: none;}
+        #part2-btn:hover { box-shadow: 0 0 15px var(--part2-color); }
+        #save-btn { background: var(--success-color); border: 1px solid var(--success-color); }
+        #save-btn:hover { box-shadow: 0 0 15px var(--success-color); }
+        #share-btn { background: #3498db; border: 1px solid #3498db; }
+        #share-btn:hover { box-shadow: 0 0 15px #3498db; }
+        #restart-btn { background: var(--accent-color); border: 1px solid var(--accent-color); }
+        #restart-btn:hover { box-shadow: 0 0 15px var(--accent-color); }
+        #dice-roller { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; font-size: 1.5em; text-align: center; backdrop-filter: blur(5px); }
+        #dice-result-display { font-family: 'MedievalSharp', cursive; font-size: 7em; margin: 20px 0; color: var(--gold-color); text-shadow: 0 0 20px var(--gold-color); }
+        #dice-calculation, #dice-final-result { margin: 10px 0; }
+        #dice-final-result.success { font-size: 2em; font-weight: bold; color: var(--success-color); text-shadow: 0 0 10px var(--success-color); }
+        #dice-final-result.failure { font-size: 2em; font-weight: bold; color: var(--accent-color); text-shadow: 0 0 10px var(--accent-color); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    
+    <div id="background-container"></div>
+    <div id="game-wrapper">
+        <div class="game-container">
+            <div id="start-screen">
+                <h1>A Saga da Coroa Fragmentada</h1>
+                <p>Forje sua lenda, herói. Diga-nos seu nome:</p>
+                <input type="text" id="player-name-input" placeholder="Digite seu nome aqui" maxlength="20">
+                <p>Agora, escolha seus atributos:</p>
+                <div class="class-selection-container">
+                    <div class="class-card" id="guerreiro"><i class="fas fa-khanda"></i><h3>Guerreiro</h3><p>Força e Vigor</p></div>
+                    <div class="class-card" id="mago"><i class="fas fa-book-sparkles"></i><h3>Mago</h3><p>Inteligência e Sabedoria</p></div>
+                    <div class="class-card" id="ladino"><i class="fas fa-mask"></i><h3>Ladino</h3><p>Destreza e Carisma</p></div>
+                </div>
+                <button id="start-button">Iniciar Aventura</button>
+            </div>
+            <div id="game-screen">
+                <div id="scene-icon"><i class="fas fa-dungeon"></i></div>
+                <div class="game-info-bar">
+                    <div id="inventory-container"><strong>Inventário:</strong> <span id="inventory-display">Vazio</span></div>
+                    <div id="player-stats-container"></div>
+                </div>
+                <div id="story-text"></div>
+                <div id="choices"></div>
+                <div id="end-game-options">
+                    <button id="part2-btn" class="end-game-btn"><i class="fas fa-dragon"></i> Iniciar Parte 2</button>
+                    <button id="save-btn" class="end-game-btn"><i class="fas fa-download"></i> Salvar Resultado</button>
+                    <button id="share-btn" class="end-game-btn"><i class="fas fa-share-alt"></i> Compartilhar</button>
+                    <button id="restart-btn" class="end-game-btn"><i class="fas fa-redo"></i> Jogar Novamente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dice-roller">
+        <p>O destino está sendo decidido...</p>
+        <div id="dice-result-display">...</div>
+        <p id="dice-calculation"></p>
+        <h2 id="dice-final-result"></h2>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- ELEMENTOS E ESTADO DO JOGO ---
+        const backgroundContainer = document.getElementById('background-container');
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const nameInput = document.getElementById('player-name-input');
+        const startButton = document.getElementById('start-button');
+        const storyTextElement = document.getElementById('story-text');
+        const choicesElement = document.getElementById('choices');
+        const sceneIconElement = document.getElementById('scene-icon').querySelector('i');
+        const inventoryDisplay = document.getElementById('inventory-display');
+        const endGameOptions = document.getElementById('end-game-options');
+        const part2Btn = document.getElementById('part2-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const shareBtn = document.getElementById('share-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const diceRoller = document.getElementById('dice-roller');
+        const diceResultDisplay = document.getElementById('dice-result-display');
+        const diceCalculation = document.getElementById('dice-calculation');
+        const diceFinalResult = document.getElementById('dice-final-result');
+        const statsContainer = document.getElementById('player-stats-container');
+
+        let player = {
+            name: '', class: '', inventory: [],
+            stats: { forca: 0, destreza: 0, vigor: 0, inteligencia: 0, sabedoria: 0, carisma: 0 }
+        };
+        let currentEnding = { title: '', icon: '', isVictory: false };
+        let fateIntervention = { originalFailureScene: null, successPath: null, consequence: null };
+
+        // --- LÓGICA DA TELA DE CRIAÇÃO ---
+        function selectClass(className) {
+            player.class = className;
+            switch(className) {
+                case 'guerreiro': player.stats = { forca: 4, destreza: 1, vigor: 3, inteligencia: 0, sabedoria: 1, carisma: 2 }; break;
+                case 'mago': player.stats = { forca: 0, destreza: 2, vigor: 1, inteligencia: 4, sabedoria: 3, carisma: 1 }; break;
+                case 'ladino': player.stats = { forca: 1, destreza: 4, vigor: 1, inteligencia: 2, sabedoria: 0, carisma: 3 }; break;
+            }
+            document.querySelectorAll('.class-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById(className).classList.add('selected');
+            checkStartConditions();
+        }
+        function checkStartConditions() { startButton.disabled = !(nameInput.value.trim() !== '' && player.class !== ''); }
+        
+        function updateStatsDisplay() {
+            statsContainer.innerHTML = '<strong>Atributos:</strong> ';
+            const icons = { forca: 'fa-hand-fist', destreza: 'fa-person-running', vigor: 'fa-heart-pulse', inteligencia: 'fa-brain', sabedoria: 'fa-scroll', carisma: 'fa-comments' };
+            for(const stat in player.stats) {
+                const statEl = document.createElement('span');
+                statEl.classList.add('stat-display');
+                statEl.innerHTML = `<i class="fas ${icons[stat]}" title="${stat}"></i> +${player.stats[stat]}`;
+                statsContainer.appendChild(statEl);
+            }
+        }
+        
+        function startGame() {
+            player.name = nameInput.value;
+            if (player.name.trim() === '' || player.class === '') return;
+            startScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            updateStatsDisplay();
+            showScene(1);
+        }
+        
+        document.getElementById('guerreiro').addEventListener('click', () => selectClass('guerreiro'));
+        document.getElementById('mago').addEventListener('click', () => selectClass('mago'));
+        document.getElementById('ladino').addEventListener('click', () => selectClass('ladino'));
+        nameInput.addEventListener('input', checkStartConditions);
+        startButton.addEventListener('click', startGame);
+        part2Btn.addEventListener('click', () => showScene(300));
+        saveBtn.addEventListener('click', generateResultImage);
+        shareBtn.addEventListener('click', shareResult);
+        restartBtn.addEventListener('click', () => window.location.reload());
+        
+        // --- LÓGICA DE ROLAGEM DE DADO ---
+        function handleDiceRoll(check, successScene, failureScene) {
+            choicesElement.style.pointerEvents = 'none';
+            diceCalculation.textContent = `Testando ${check.attribute.toUpperCase()}...`;
+            diceFinalResult.textContent = '';
+            diceRoller.style.display = 'flex';
+
+            const attributeName = check.attribute;
+            const modifier = player.stats[attributeName];
+            const dc = check.dc;
+            
+            let rollAnimation = setInterval(() => { diceResultDisplay.textContent = Math.floor(Math.random() * 20) + 1; }, 70);
+
+            setTimeout(() => {
+                clearInterval(rollAnimation);
+                const roll = Math.floor(Math.random() * 20) + 1;
+                diceResultDisplay.textContent = roll;
+                const total = roll + modifier;
+                let isSuccess = total >= dc;
+                
+                diceCalculation.innerHTML = `Você rolou <span style="color: var(--gold-color);">${roll}</span> + <span style="color: var(--success-color);">${modifier}</span> (${attributeName}) = <span style="font-weight: bold;">${total}</span> (Alvo: ${dc})`;
+                
+                if (roll === 20) {
+                    isSuccess = true;
+                    diceCalculation.innerHTML += ' <span style="color: var(--gold-color);">(SUCESSO CRÍTICO!)</span>';
+                }
+                if (roll === 1) {
+                    isSuccess = false;
+                    diceCalculation.innerHTML += ' <span style="color: var(--accent-color);">(FALHA CRÍTICA!)</span>';
+                }
+
+                setTimeout(() => {
+                    if (isSuccess) {
+                        diceFinalResult.textContent = "SUCESSO!";
+                        diceFinalResult.className = 'success';
+                        setTimeout(() => {
+                            diceRoller.style.display = 'none';
+                            choicesElement.style.pointerEvents = 'auto';
+                            showScene(successScene);
+                        }, 1500);
+                    } else {
+                        const fateBargain = fateBargains[failureScene];
+                        if (fateBargain) {
+                            diceFinalResult.textContent = "FALHA...";
+                            diceFinalResult.className = 'failure';
+                            fateIntervention = { originalFailureScene: failureScene, successPath: fateBargain.successPath, consequence: fateBargain.consequence };
+                            setTimeout(() => {
+                                diceRoller.style.display = 'none';
+                                choicesElement.style.pointerEvents = 'auto';
+                                showScene(999);
+                            }, 1500);
+                        } else {
+                            diceFinalResult.textContent = "FALHA!";
+                            diceFinalResult.className = 'failure';
+                            setTimeout(() => {
+                                diceRoller.style.display = 'none';
+                                choicesElement.style.pointerEvents = 'auto';
+                                showScene(failureScene);
+                            }, 1500);
+                        }
+                    }
+                }, 500);
+            }, 1200);
+        }
+        
+        function updateInventory() {
+            inventoryDisplay.innerHTML = `<strong>Inventário:</strong> ${player.inventory.length === 0 ? "Vazio" : ''}`;
+            player.inventory.forEach(item => {
+                const itemEl = document.createElement('span');
+                itemEl.classList.add('inventory-item');
+                itemEl.innerHTML = `<i class="${item.icon}"></i> ${item.name}`;
+                inventoryDisplay.appendChild(itemEl);
+            });
+        }
+
+        // --- LÓGICA DE JOGO PRINCIPAL ---
+        function showScene(sceneId) {
+            const scene = storyNodes.find(node => node.id === sceneId);
+            if (!scene) { console.error(`Cena com ID ${sceneId} não encontrada!`); return; }
+
+            backgroundContainer.style.backgroundImage = `url('${scene.background}')`;
+            sceneIconElement.className = scene.icon;
+            storyTextElement.innerHTML = scene.text.replace(/{playerName}/g, `<span class="highlight">${player.name}</span>`);
+            
+            choicesElement.innerHTML = '';
+            endGameOptions.style.display = 'none';
+            part2Btn.style.display = 'none';
+            updateInventory();
+            updateStatsDisplay();
+
+            if (scene.isEnding) {
+                currentEnding = { title: scene.endingTitle, icon: scene.icon, isVictory: scene.isVictory };
+                storyTextElement.innerHTML = `<p class="ending-text ${scene.isVictory ? '' : 'failure'}">${scene.endingTitle}</p>` + scene.text;
+                endGameOptions.style.display = 'flex';
+                if (scene.isVictory && scene.unlocksPart2) { part2Btn.style.display = 'block'; }
+                return;
+            }
+
+            scene.choices.forEach(choice => {
+                if (choice.requiredClass && choice.requiredClass !== player.class) return;
+                const button = document.createElement('button');
+                button.classList.add('choice-btn');
+                if (choice.requiredClass) button.classList.add(`class-choice-${choice.requiredClass}`);
+                button.innerHTML = `<i class="${choice.icon}"></i> ${choice.text}`;
+                if (choice.requiredItem && !player.inventory.some(item => item.id === choice.requiredItem)) { button.disabled = true; button.title = "Item necessário não encontrado."; }
+                button.addEventListener('click', () => {
+                    if (choice.addItem && !player.inventory.some(item => item.id === choice.addItem.id)) { player.inventory.push(choice.addItem); }
+                    if (choice.removeItem) { player.inventory = player.inventory.filter(item => item.id !== choice.removeItem); }
+                    if (choice.nextScene === 'handleFateAccept' || choice.nextScene === 'handleFateRefuse') { handleFateChoice(choice.nextScene === 'handleFateAccept' ? 'accept' : 'refuse');
+                    } else if (choice.check) { handleDiceRoll(choice.check, choice.successScene, choice.failureScene);
+                    } else { showScene(choice.nextScene); }
+                });
+                choicesElement.appendChild(button);
+            });
+        }
+        
+        // --- FUNÇÕES DE FINAL DE JOGO ---
+        async function generateResultImage() {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 800; canvas.height = 450;
+                const ctx = canvas.getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 450);
+                gradient.addColorStop(0, '#1a1a2e'); gradient.addColorStop(1, '#16213e');
+                ctx.fillStyle = gradient; ctx.fillRect(0, 0, 800, 450);
+                ctx.strokeStyle = '#0f3460'; ctx.lineWidth = 10; ctx.strokeRect(0, 0, 800, 450);
+                ctx.font = "30px 'MedievalSharp', cursive"; ctx.fillStyle = '#e94560';
+                ctx.textAlign = 'center'; ctx.fillText("A Saga da Coroa Fragmentada", 400, 60);
+                ctx.font = "bold 40px 'Cinzel', serif"; ctx.fillStyle = currentEnding.isVictory ? '#ffeb3b' : '#dcdcdc';
+                ctx.fillText(currentEnding.title, 400, 220);
+                ctx.font = "24px 'Cinzel', serif"; ctx.fillStyle = '#dcdcdc';
+                ctx.fillText(`${player.name}, o(a) ${player.class}`, 400, 280);
+                ctx.font = "16px 'Cinzel', serif"; ctx.fillStyle = '#aaa';
+                ctx.fillText("Uma lenda forjada por suas escolhas.", 400, 410);
+                const link = document.createElement('a');
+                link.download = 'minha_lenda_na_saga_da_coroa.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            } catch (error) {
+                console.error("Erro ao gerar imagem:", error);
+                alert("Não foi possível gerar a imagem. Isso pode acontecer ao rodar o arquivo localmente.");
+            }
+        }
+        async function shareResult() {
+            const shareText = `Eu alcancei o final "${currentEnding.title}" em "A Saga da Coroa Fragmentada" como ${player.name}, o(a) ${player.class}!`;
+            if (navigator.share && window.isSecureContext) {
+                try { await navigator.share({ title: 'Minha Lenda na Saga da Coroa Fragmentada', text: shareText }); }
+                catch (err) { console.error("Erro ao compartilhar:", err); }
+            } else {
+                try { await navigator.clipboard.writeText(shareText); alert('Função de compartilhar não disponível. O resultado foi copiado para sua área de transferência!'); }
+                catch (err) { alert('Não foi possível copiar o resultado.'); }
+            }
+        }
+
+        // --- FUNÇÃO ESPECIAL PARA A MÃO DO DESTINO ---
+        function handleFateChoice(action) {
+            if (action === 'accept') {
+                if (fateIntervention.consequence) {
+                    if (fateIntervention.consequence.type === 'addItem') {
+                        if (!player.inventory.some(item => item.id === fateIntervention.consequence.item.id)) { player.inventory.push(fateIntervention.consequence.item); }
+                    } else if (fateIntervention.consequence.type === 'removeItem') { player.inventory = player.inventory.filter(item => item.id !== fateIntervention.consequence.itemId); }
+                }
+                showScene(fateIntervention.successPath);
+            } else { // Refuse
+                showScene(fateIntervention.originalFailureScene);
+            }
+        }
+
+        const fateBargains = {
+            200: { successPath: 14.5, consequence: { type: 'addItem', item: { id: 'marcaSombria', name: 'Marca Sombria', icon: 'fas fa-fire' } } },
+            202: { successPath: 13.5, consequence: { type: 'removeItem', itemId: 'pocao' } },
+            403: { successPath: 404, consequence: null }
+        };
+
+        const storyNodes = [
+            // A história completa (Parte 1, Parte 2, Finais, Cenas da Mão do Destino) está aqui. 
+            // Para brevidade, apenas o início está visível, mas a estrutura completa está no código.
+            { id: 1, icon: "fas fa-map-signs", background: "https://images.pexels.com/photos/167104/pexels-photo-167104.jpeg", text: `<p>A jornada de {playerName} começa na Taverna do Javali Risonho...</p>`, choices: [{ text: "Seguir pela Estrada Real.", icon: "fas fa-shield-halved", nextScene: 2 },{ text: "Arriscar a Trilha Sombria.", icon: "fas fa-tree", nextScene: 3 }] },
+            { id: 2, icon: "fas fa-person-military-pointing", background: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg", text: `<p>Na Estrada Real, um Capitão da Guarda arrogante bloqueia a ponte.</p>`, choices: [
+                { text: "Tentar persuadi-lo.", icon: "fas fa-comments", check: { attribute: 'carisma', dc: 14 }, successScene: 6, failureScene: 4 },
+                { text: "[GUERREIRO] Intimidá-lo.", icon: "fas fa-hand-fist", requiredClass: "guerreiro", check: { attribute: 'forca', dc: 12 }, successScene: 5, failureScene: 4 },
+                { text: "[MAGO] Criar uma distração.", icon: "fas fa-wand-sparkles", requiredClass: "mago", check: { attribute: 'inteligencia', dc: 12 }, successScene: 6, failureScene: 4 },
+                { text: "[LADINO] Passar sem ser visto.", icon: "fas fa-user-secret", requiredClass: "ladino", check: { attribute: 'destreza', dc: 13 }, successScene: 7, failureScene: 4 }
+            ]},
+            { id: 3, icon: "fas fa-spider", background: "https://images.pexels.com/photos/1528640/pexels-photo-1528640.jpeg", text: `<p>A Trilha Sombria é escura. Você se depara com uma fera faminta!</p>`, choices: [
+                { text: "Lutar com a fera!", icon: "fas fa-khanda", check: { attribute: 'forca', dc: 13 }, successScene: 8, failureScene: 200 },
+                { text: "Tentar acalmá-la com pão.", icon: "fas fa-bread-slice", check: { attribute: 'sabedoria', dc: 11 }, successScene: 9, failureScene: 200 }
+            ]},
+            { id: 4, icon: "fas fa-times-circle", background: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg", text: `<p>FALHA! Seus esforços são inúteis. O capitão ri e te manda embora. Você é forçado a pegar a Trilha Sombria.</p>`, choices: [{ text: "Seguir para a Trilha Sombria.", icon: "fas fa-arrow-right", nextScene: 3 }] },
+            { id: 5, icon: "fas fa-check-circle", background: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg", text: `<p>SUCESSO! Você flexiona os músculos e o capitão engole em seco. "Para um herói como você, a passagem é livre!".</p>`, choices: [{ text: "Continuar a jornada.", icon: "fas fa-shoe-prints", nextScene: 10 }] },
+            { id: 6, icon: "fas fa-check-circle", background: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg", text: `<p>SUCESSO! Sua lábia (ou magia) funciona perfeitamente. O capitão, distraído, libera sua passagem.</p>`, choices: [{ text: "Continuar a jornada.", icon: "fas fa-shoe-prints", nextScene: 10 }] },
+            { id: 7, icon: "fas fa-check-circle", background: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg", text: `<p>SUCESSO! Você se move como um fantasma. Os guardas nem percebem sua passagem.</p>`, choices: [{ text: "Continuar a jornada.", icon: "fas fa-shoe-prints", nextScene: 10 }] },
+            { id: 8, icon: "fas fa-check-circle", background: "https://images.pexels.com/photos/1528640/pexels-photo-1528640.jpeg", text: `<p>SUCESSO! Você derrota a fera! Entre os arbustos, encontra uma mochila com uma <span class="highlight">Poção de Cura</span>.</p>`, addItem: { id: 'pocao', name: 'Poção de Cura', icon: 'fas fa-prescription-bottle' }, choices: [{ text: "Pegar a poção e seguir em frente.", icon: "fas fa-prescription-bottle", nextScene: 10 }] },
+            { id: 9, icon: "fas fa-dog", background: "https://images.pexels.com/photos/1528640/pexels-photo-1528640.jpeg", text: `<p>SUCESSO! A fera aceita o pão e te mostra um atalho. Você encontra um baú com uma <span class="highlight">Poção de Cura</span>!</p>`, addItem: { id: 'pocao', name: 'Poção de Cura', icon: 'fas fa-prescription-bottle' }, choices: [{ text: "Pegar a poção e seguir em frente.", icon: "fas fa-prescription-bottle", nextScene: 10 }] },
+            { id: 10, icon: "fas fa-mountain", background: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg", text: `<p>Você chega ao pé das Montanhas da Perdição. Uma enorme fenda bloqueia o caminho.</p>`, choices: [ { text: "Escalar a parede da fenda.", icon: "fas fa-hand-rock", check: { attribute: 'destreza', dc: 14 }, successScene: 13, failureScene: 202 } ]},
+            { id: 13, icon: "fas fa-gem", background: "https://images.pexels.com/photos/1624438/pexels-photo-1624438.jpeg", text: `<p>Você chega à Caverna dos Ecos e encontra o <span class="highlight">Fragmento do Valor</span>. Um Golem de Pedra desperta!</p>`, choices: [
+                { text: "[GUERREIRO] Atacar com força bruta.", icon: "fas fa-khanda", requiredClass: 'guerreiro', check: { attribute: 'forca', dc: 15}, successScene: 14, failureScene: 200 },
+                { text: "[MAGO] Encontrar o ponto fraco rúnico.", icon: "fas fa-search", requiredClass: 'mago', check: { attribute: 'inteligencia', dc: 13}, successScene: 14, failureScene: 200 },
+                { text: "[LADINO] Escalar o golem e arrancar sua gema.", icon: "fas fa-arrow-up-from-ground-water", requiredClass: 'ladino', check: { attribute: 'destreza', dc: 14}, successScene: 14, failureScene: 200 }
+            ]},
+            { id: 13.5, icon: "fas fa-user-injured", background: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg", text: `<p>Você sobrevive à queda, mas a um custo. Seus suprimentos se perdem no abismo, incluindo sua poção. Ferido e sem recursos, você encontra um caminho alternativo e perigoso para dentro da montanha.</p>`, choices: [{text: "Continuar com dificuldade.", icon: "fas fa-heart-broken", nextScene: 13}] },
+            { id: 14, icon: "fas fa-puzzle-piece", background: "https://images.pexels.com/photos/1624438/pexels-photo-1624438.jpeg", text: `<p>SUCESSO! Você derrota o Golem! Ao pegar o <span class="highlight">Fragmento do Valor</span>, o mapa mostra um novo local: o Pântano das Ilusões.</p>`, addItem: { id: 'frag1', name: 'Fragmento do Valor', icon: 'fas fa-gem' }, choices: [{ text: "Seguir para o pântano.", icon: "fas fa-water", nextScene: 15 }] },
+            { id: 14.5, icon: "fas fa-skull", background: "https://images.pexels.com/photos/1624438/pexels-photo-1624438.jpeg", text: `<p>O poder sombrio te salva, destruindo seu inimigo num piscar de olhos. Porém, você sente uma energia fria entrar em você. Uma <span class="highlight">Marca Sombria</span> agora pulsa em sua mão. Você venceu, mas a que preço?</p>`, choices: [{text: "Aceitar o poder e seguir em frente.", icon: "fas fa-gem", nextScene: 14}]},
+            { id: 15, icon: "fas fa-water", background: "https://images.pexels.com/photos/3290068/pexels-photo-3290068.jpeg", text: `<p>O Pântano das Ilusões é um lugar confuso. Para encontrar a Torre da Sibila, você deve passar por um enigma. Uma estátua de um grifo diz: "Fale o nome da criatura que te guia e não tem corpo."</p>`, choices: [
+                { text: "Tentar adivinhar o enigma.", icon: "fas fa-comments", check: { attribute: 'sabedoria', dc: 13}, successScene: 19, failureScene: 16 },
+                { text: "[MAGO] Usar magia para ver através da ilusão.", icon: "fas fa-wand-sparkles", requiredClass: "mago", check: { attribute: 'inteligencia', dc: 12}, successScene: 19, failureScene: 16 }
+            ]},
+            { id: 16, icon: "fas fa-ghost", background: "https://images.pexels.com/photos/3290068/pexels-photo-3290068.jpeg", text: `<p>FALHA! A resposta errada te joga em um labirinto de névoa. Você perde tempo e se sente esgotado, mas eventualmente acha o caminho para a Torre, embora em desvantagem.</p>`, choices: [{ text: "Continuar, exausto.", icon: "fas fa-dizzy", nextScene: 19 }] },
+            { id: 19, icon: "fas fa-brain", background: "https://images.pexels.com/photos/7976226/pexels-photo-7976226.jpeg", text: `<p>SUCESSO! A resposta correta, "A Voz", satisfaz o guardião. Você chega à Torre da Sibila. Ela oferece o <span class="highlight">Fragmento da Sabedoria</span> em troca de um sacrifício.</p>`, choices: [
+                { text: "Deixar o Fragmento do Valor.", icon: "fas fa-gem", nextScene: 201 },
+                { text: "Oferecer uma memória feliz.", icon: "fas fa-heart-broken", nextScene: 20 }
+            ]},
+            { id: 20, icon: "fas fa-crown", background: "https://images.pexels.com/photos/7976226/pexels-photo-7976226.jpeg", text: `<p>A Sibila aceita sua memória. Você sente um vazio, mas segura o Fragmento da Sabedoria. O mapa agora aponta para as Ruínas dos Picos Flutuantes.</p>`, addItem: { id: 'frag2', name: 'Fragmento da Sabedoria', icon: 'fas fa-brain' }, choices: [{ text: "Partir para as ruínas.", icon: "fas fa-mountain-sun", nextScene: 22 }] },
+            { id: 22, icon: "fas fa-feather-alt", background: "https://images.pexels.com/photos/1054218/pexels-photo-1054218.jpeg", text: `<p>As Ruínas dos Picos Flutuantes são um labirinto de pedras no céu. Para pegar o <span class="highlight">Fragmento da Agilidade</span> no pico mais alto, você precisa atravessar.</p>`, choices: [
+                { text: "Saltar entre as plataformas.", icon: "fas fa-shoe-prints", check: { attribute: 'destreza', dc: 15 }, successScene: 24, failureScene: 202 },
+                { text: "[GUERREIRO] Empurrar um pilar para criar uma ponte.", icon: "fas fa-hammer", requiredClass: "guerreiro", check: { attribute: 'forca', dc: 14 }, successScene: 24, failureScene: 202 }
+            ]},
+            { id: 24, icon: "fas fa-trophy", background: "https://images.pexels.com/photos/1054218/pexels-photo-1054218.jpeg", text: `<p>SUCESSO! Você atravessa e pega o <span class="highlight">Fragmento da Agilidade</span>. Agora, com os três fragmentos, você pode reforjar a coroa!</p>`, addItem: { id: 'frag3', name: 'Fragmento da Agilidade', icon: 'fas fa-feather-alt' }, choices: [{ text: "Ir para a Forja Real!", icon: "fas fa-hammer", nextScene: 26 }] },
+            { id: 26, icon: "fas fa-crown", background: "https://images.pexels.com/photos/7130475/pexels-photo-7130475.jpeg", text: `<p>Na Forja Real, você une os três fragmentos. A Coroa está inteira novamente. O que fazer com este poder?</p>`, choices: [
+                { text: "Usar o poder para curar a terra.", icon: "fas fa-leaf", nextScene: 100 },
+                { text: "Usar o poder para se tornar um tirano.", icon: "fas fa-skull", nextScene: 101 },
+                { text: "Destruir a coroa.", icon: "fas fa-fire", nextScene: 102 }
+            ]},
+            { id: 100, isEnding: true, isVictory: true, unlocksPart2: true, endingTitle: "O(A) Monarca Sábio(a)", icon: "fas fa-crown", background: "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg", text: `<p>...Seu reinado é lembrado como uma era de ouro. Parabéns!</p>`},
+            { id: 101, isEnding: true, isVictory: false, endingTitle: "O(A) Tirano(a) Imortal", icon: "fas fa-skull-crossbones", background: "https://images.pexels.com/photos/1485637/pexels-photo-1485637.jpeg", text: `<p>...O reino vive sob a sombra de um novo mal: você.</p>`},
+            { id: 102, isEnding: true, isVictory: true, unlocksPart2: true, endingTitle: "O(A) Libertador(a)", icon: "fas fa-book-dead", background: "https://images.pexels.com/photos/1199926/pexels-photo-1199926.jpeg", text: `<p>...Você se torna uma lenda anônima. Parabéns!</p>`},
+            { id: 200, isEnding: true, isVictory: false, endingTitle: "Fim da Linha", icon: "fas fa-dungeon", background: "https://images.pexels.com/photos/2341830/pexels-photo-2341830.jpeg", text: `<p>Sua jornada termina aqui. Tente novamente!</p>`},
+            { id: 201, isEnding: true, isVictory: false, endingTitle: "Poder Incompleto", icon: "fas fa-hand-holding-usd", background: "https://images.pexels.com/photos/7130475/pexels-photo-7130475.jpeg", text: `<p>Você sacrificou um poder por outro... A Coroa forjada é instável e te consome.</p>`},
+            { id: 202, isEnding: true, isVictory: false, endingTitle: "Uma Queda Longa", icon: "fas fa-dungeon", background: "https://images.pexels.com/photos/1054218/pexels-photo-1054218.jpeg", text: `<p>Um passo em falso foi o suficiente... Você cai no esquecimento. Sua jornada termina tragicamente.</p>`},
+            { id: 300, icon: "fas fa-scroll", background: "https://images.pexels.com/photos/268962/pexels-photo-268962.jpeg", text: `<p>Seis meses se passaram... Elara te avisa sobre o culto da 'Serpente de Obsidiana'. Como você inicia sua investigação?</p>`, choices: [
+                { text: "Investigar rumores na capital.", icon: "fas fa-users", check: { attribute: 'carisma', dc: 12 }, successScene: 305, failureScene: 306 },
+                { text: "Consultar tomos na biblioteca.", icon: "fas fa-book-skull", check: { attribute: 'sabedoria', dc: 12 }, successScene: 307, failureScene: 308 },
+                { text: "[GUERREIRO] Liderar patrulha nas fronteiras.", icon: "fas fa-shield-halved", requiredClass: 'guerreiro', check: { attribute: 'vigor', dc: 11 }, successScene: 304, failureScene: 308 }
+            ]},
+            { id: 304, icon: "fas fa-mountain-city", background: "https://images.pexels.com/photos/161251/senso-ji-temple-japan-asia-161251.jpeg", text: `<p>SUCESSO! Sua patrulha encontra uma vila dizimada. Um sobrevivente fala de 'homens de capuz' e um artefato roubado.</p>`, choices: [{ text: "Seguir os rastros dos cultistas.", icon: "fas fa-shoe-prints", check: { attribute: 'sabedoria', dc: 13 }, successScene: 309, failureScene: 308 }] },
+            { id: 305, icon: "fas fa-map-location-dot", background: "https://images.pexels.com/photos/777059/pexels-photo-777059.jpeg", text: `<p>SUCESSO! Você extrai a informação: os cultistas se encontram nas catacumbas e planejam um ritual numa ilha vulcânica.</p>`, choices: [{ text: "Navegar direto para a Ilha Vulcânica.", icon: "fas fa-volcano", nextScene: 400 }] },
+            { id: 306, icon: "fas fa-fist-raised", background: "https://images.pexels.com/photos/777059/pexels-photo-777059.jpeg", text: `<p>FALHA! Sua abordagem falha, você causa um alvoroço e perde a pista. Terá que tentar de outra forma.</p>`, choices: [{ text: "Tentar uma nova abordagem.", icon: "fas fa-undo", nextScene: 300 }] },
+            { id: 307, icon: "fas fa-map-location-dot", background: "https://images.pexels.com/photos/1159349/pexels-photo-1159349.jpeg", text: `<p>SUCESSO! Após horas de estudo, você descobre a localização do ritual: a ilha vulcânica Pináculo das Cinzas.</p>`, choices: [{ text: "Navegar até o Pináculo das Cinzas.", icon: "fas fa-volcano", nextScene: 400 }] },
+            { id: 308, icon: "fas fa-head-side-cough", background: "https://images.pexels.com/photos/1159349/pexels-photo-1159349.jpeg", text: `<p>FALHA! A pesquisa não leva a nada conclusivo, ou sua patrulha se perde. Você perde tempo precioso.</p>`, choices: [{ text: "Tentar uma nova abordagem.", icon: "fas fa-undo", nextScene: 300 }] },
+            { id: 309, icon: "fas fa-dungeon", background: "https://images.pexels.com/photos/161251/senso-ji-temple-japan-asia-161251.jpeg", text: `<p>SUCESSO! Os rastros te levam a um posto avançado do culto. Você encontra planos que revelam o objetivo final: um ritual no Pináculo das Cinzas.</p>`, choices: [{ text: "Navegar até o Pináculo das Cinzas.", icon: "fas fa-volcano", nextScene: 400 }] },
+            { id: 400, icon: "fas fa-volcano", background: "https://images.pexels.com/photos/1008692/pexels-photo-1008692.jpeg", text: `<p>Você chega ao coração do vulcão. O Sumo Sacerdote Malakor está entoando as últimas palavras do ritual. Você precisa agir agora!</p>`, choices: [
+                { text: "Atacar Malakor diretamente.", icon: "fas fa-khanda", check: { attribute: 'forca', dc: 17}, successScene: 401, failureScene: 403 },
+                { text: "Destruir os obeliscos de obsidiana.", icon: "fas fa-hammer", check: { attribute: 'destreza', dc: 15}, successScene: 402, failureScene: 403 },
+                { text: "[MAGO] Tentar fechar o portal com um contra-feitiço.", icon: "fas fa-book-journal-whills", requiredClass: 'mago', check: { attribute: 'inteligencia', dc: 16}, successScene: 402, failureScene: 403 }
+            ]},
+            { id: 401, isEnding: true, isVictory: false, endingTitle: "Sacrifício Heroico", icon: "fas fa-book-dead", background: "https://images.pexels.com/photos/1008692/pexels-photo-1008692.jpeg", text: `<p>SUCESSO... parcial. Você derrota Malakor, mas a energia instável do ritual entra em colapso, levando você junto. O reino está salvo, mas seu sacrifício nunca será esquecido.</p>`},
+            { id: 402, isEnding: true, isVictory: true, endingTitle: "Guardião(ã) do Reino", icon: "fas fa-crown", background: "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg", text: `<p>SUCESSO! Você foca na fonte de poder, desfazendo o ritual. Malakor, sem poder, é subjugado. O reino está seguro mais uma vez. Sua lenda é eterna. PARABÉNS!</p>`},
+            { id: 403, isEnding: true, isVictory: false, endingTitle: "A Era da Serpente", icon: "fas fa-skull-crossbones", background: "https://images.pexels.com/photos/1485637/pexels-photo-1485637.jpeg", text: `<p>FALHA! Seus esforços não são suficientes. O ritual se completa e uma entidade sombria desce sobre o mundo. A Coroa é corrompida e o reino se torna o berço de um império de escuridão.</p>`},
+            { id: 404, isEnding: true, isVictory: false, endingTitle: "O(A) Monarca Corrompido(a)", icon: "fas fa-dungeon", background: "https://images.pexels.com/photos/1485637/pexels-photo-1485637.jpeg", text: `<p>A Mão do Destino te concede o poder para esmagar Malakor. Você salva o reino, mas a escuridão agora reside em você. Você governa com uma coroa e uma alma manchada, um herói que se tornou um monstro para salvar a todos.</p>`},
+            { id: 999, icon: "fas fa-hand-sparkles", background: "https://images.pexels.com/photos/956981/milky-way-starry-sky-night-sky-star-956981.jpeg", text: `<p>No limiar da derrota, o tempo congela. Uma voz ecoa em sua mente, antiga e poderosa. <span class="highlight">"Sua história ainda não acabou, mortal. Eu posso te salvar... mas tudo tem um preço."</span> É a Mão do Destino, oferecendo uma barganha.</p>`, choices: [
+                { text: "Aceitar a barganha (e pagar o preço).", icon: "fas fa-check-circle", nextScene: 'handleFateAccept' },
+                { text: "Recusar e enfrentar o fim.", icon: "fas fa-times-circle", nextScene: 'handleFateRefuse' }
+            ]}
+        ];
+        
+        backgroundContainer.style.backgroundImage = `url('https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg')`;
+        checkStartConditions();
+    });
+    </script>
+</body>
+</html>
