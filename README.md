@@ -42,23 +42,13 @@ Este não é um simples jogo de "clique e avance". Aqui está o que torna esta s
 1.  **Baixe o Jogo:**
     * Clique no botão verde `<> Code` no topo desta página.
     * Selecione `Download ZIP`.
-    * Extraia o arquivo `A-Saga-da-Coroa-Fragmentada.html` (ou o nome que você der).
+    * Extraia o arquivo `.html` do ZIP.
 
 2.  **Abra no Navegador:**
     * Clique duas vezes no arquivo `.html`. Ele abrirá em qualquer navegador de internet moderno (Chrome, Firefox, Edge, etc.).
 
 3.  **Jogue!**
     * Para a melhor experiência, coloque o navegador em tela cheia (geralmente com a tecla F11).
-
----
-
-## 📸 Capturas de Tela
-
-*Fica a dica: grave um GIF da animação do dado rolando! Fica incrível aqui.*
-
-| Tela de Criação | Rolando os Dados | A Mão do Destino |
-| :-------------: |:-------------:|:-------------:|
-| *(Insira aqui um print da tela de criação de personagem)* | *(Insira aqui um print ou GIF da tela de rolagem do d20)* | *(Insira aqui um print da tela da Mão do Destino)* |
 
 ---
 
@@ -72,21 +62,14 @@ Este projeto foi construído do zero utilizando apenas as tecnologias fundamenta
 
 ---
 
-## 🤔 Como Contribuir
+## 💡 Tem uma Ideia? Fale Comigo!
 
-Adoraria ver esta saga crescer! Se você tiver ideias para novas histórias, itens, classes, ou melhorias na interface, sinta-se à vontade para contribuir.
+Adoraria ouvir suas ideias para expandir esta saga! Se você pensou em uma nova aventura, uma classe diferente, um item mágico ou qualquer outra melhoria, me chame no Instagram!
 
-1.  **Faça um Fork** do projeto.
-2.  Crie uma nova Branch (`git checkout -b feature/SuaNovaIdeia`).
-3.  Faça suas alterações.
-4.  Faça o Commit (`git commit -m 'Adiciona SuaNovaIdeia'`).
-5.  Faça o Push para a Branch (`git push origin feature/SuaNovaIdeia`).
-6.  Abra um **Pull Request**.
+Sua criatividade é muito bem-vinda para tornar este universo ainda maior.
+
+**[➡️ Me mande uma DM no Instagram: @dev_vianavivi](https://www.instagram.com/dev_vianavivi/)**
 
 ---
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 **Feito com paixão, café e muitas rolagens de D20!**
